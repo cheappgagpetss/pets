@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Galaxy Pets • Grow a Garden</title>
+  <meta name="description" content="Buy coins, level up your pets, and browse the catalog — all in a vibrant galaxy theme." />
+  <link rel="icon" href="favicon.svg"/>
+  <style>
+    :root{
+      --card-bg: rgba(10, 12, 22, 0.7);
+      --card-bd: rgba(255,255,255,0.08);
+      --text: #e9f0ff;
+      --muted: #b6c3ff;
+      --primary: #8f7aff;
+      --accent: #00e5ff;
+      --hot: #ff6cfb;
+      --success: #66ffa6;
+      --warning: #ffd166;
+      --danger: #ff7b7b;
+      --glow: 0 0 24px rgba(143,122,255,0.5), 0 0 48px rgba(0,229,255,0.25);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0; font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text); background:#050616; overflow-x:hidden;
+    }
+    .bg{
+      position:fixed; inset:0; z-index:-2; background: radial-gradient(1200px 800px at 10% 20%, rgba(143,122,255,0.25), transparent 70%),
+      radial-gradient(900px 700px at 80% 30%, rgba(0,229,255,0.22), transparent 60%),
+      radial-gradient(700px 700px at 40% 80%, rgba(255,108,251,0.2), transparent 60%),
+      linear-gradient(180deg, #050616 0%, #080a1a 60%, #0b0e22 100%);
+      animation: floatHue 16s ease-in-out infinite alternate;
+      filter: saturate(1.2);
+    }
+    @keyframes floatHue{ to{ filter: hue-rotate(20deg) saturate(1.35);} }
+    #stars{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
+
+    header{
+      position:sticky; top:0; backdrop-filter:saturate(1.6) blur(10px);
+      background:rgba(5,6,22,0.6); border-bottom:1px solid var(--card-bd);
+    }
+    .wrap{ max-width:1100px; margin:0 auto; padding:16px 20px; }
+    .brand{ display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:0.5px; }
+    .brand .logo{ width:36px; height:36px; border-radius:10px; background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: var(--glow); }
+    nav{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .nav-link{ color:var(--text); text-decoration:none; padding:10px 14px; border:1px solid transparent; border-radius:999px; transition: all .2s ease; }
+    .nav-link:hover{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,229,255,0.15); }
+    .cta{ background:linear-gradient(135deg,var(--accent),var(--primary)); color:#051018; font-weight:700; }
+    .user-pill{ margin-left:6px; font-size:12px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid var(--card-bd);}
+
+    main{ padding:26px 20px 80px; }
+    .hero{ display:grid; grid-template-columns: 1.2fr 0.8fr; gap:24px; align-items:center; }
+    @media (max-width: 880px){ .hero{ grid-template-columns:1fr; } }
+
+    .card{ background:var(--card-bg); border:1px solid var(--card-bd); border-radius:18px; box-shadow: var(--glow); }
+    .card.pad{ padding:20px; }
+    .title{ font-size:clamp(28px, 4vw, 46px); line-height:1.05; margin:0 0 12px; }
+    .subtitle{ color:var(--muted); margin:0 0 18px; }
+
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; }
+    .btn{ display:inline-flex; align-items:center; gap:8px; padding:12px 16px; border-radius:12px; border:1px solid var(--card-bd); color:var(--text); text-decoration:none; transition:.2s; cursor:pointer; }
+    .btn:hover{ transform: translateY(-1px); box-shadow: var(--glow); }
+    .btn.ghost{ background:rgba(255,255,255,0.02); }
+    .btn.primary{ background:linear-gradient(135deg,var(--primary),var(--accent)); color:#09131e; font-weight:800; }
+
+    .pill{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid var(--card-bd); color:var(--muted); font-size:12px; }
+
+    .section-title{ font-size:22px; margin:6px 0 14px; }
+
+    .list{ display:flex; flex-direction:column; gap:10px; }
+    .list-item{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-radius:14px; border:1px solid var(--card-bd); background:rgba(255,255,255,0.03); }
+    .price{ font-weight:900; color:var(--success); }
+
+    .note{ font-size:14px; color:var(--muted); }
+    footer{ border-top:1px solid var(--card-bd); padding:26px 20px; color:var(--muted); background:rgba(5,6,22,0.6); }
+    .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+    form label{ display:block; font-size:14px; color:var(--muted); margin-bottom:6px;}
+    input[type=text], input[type=password], input[type=email]{ width:100%; padding:12px 12px; border-radius:12px; border:1px solid var(--card-bd); background:rgba(255,255,255,0.06); color:var(--text); }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <canvas id="stars" aria-hidden="true"></canvas>
+
+  <header>
+    <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+      <div class="brand"><div class="logo" aria-hidden="true"></div> <span>Galaxy Pets</span></div>
+      <nav aria-label="Primary">
+        <a class="nav-link" href="#/">Home</a>
+        <a class="nav-link" href="#/buy-coins">Buy Coins</a>
+        <a class="nav-link" href="#/level-up">Level Up Your Pets</a>
+        <a class="nav-link" href="#/pets">View Pets</a>
+        <a class="nav-link cta" href="#/limited">Limited Sale</a>
+        <a class="nav-link" href="#/account">Account</a>
+        <span id="userPill" class="user-pill" style="display:none;"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="app" tabindex="-1"></main>
+
+  <footer>
+    <div class="wrap">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span class="pill">Static • GitHub Pages Ready</span>
+        <span class="pill">Coins only (1 USD = 100 coins)</span>
+      </div>
+      <div class="note" style="margin-top:8px;">Accounts are demo-only and stored in your browser. Username uniqueness is enforced locally and checked globally via GitHub Issues when hosted on Pages.</div>
+    </div>
+  </footer>
+
+  <script>
+    // ---------- Stars background ----------
+    (function(){
+      const c = document.getElementById('stars');
+      const ctx = c.getContext('2d');
+      let w, h, stars;
+      function resize(){ w = c.width = innerWidth; h = c.height = innerHeight; makeStars(); }
+      function makeStars(){
+        const count = Math.min(250, Math.floor((w*h)/8000));
+        stars = Array.from({length: count}, ()=>({
+          x: Math.random()*w,
+          y: Math.random()*h,
+          z: Math.random()*0.8 + 0.2,
+          s: Math.random()*1.2 + 0.2
+        }));
+      }
+      function draw(){
+        ctx.clearRect(0,0,w,h);
+        for(const st of stars){
+          const alpha = 0.5 + Math.sin((performance.now()/800)*st.z)*0.5;
+          ctx.fillStyle = `rgba(${200+55*st.z|0}, ${210+30*st.z|0}, 255, ${0.25+0.55*alpha})`;
+          ctx.beginPath(); ctx.arc(st.x, st.y, st.s, 0, Math.PI*2); ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+      addEventListener('resize', resize, {passive:true}); resize(); draw();
+    })();
+
+    // ---------- Simple Router ----------
+    const app = document.getElementById('app');
+    const routes = {
+      '/': homePage,
+      '/buy-coins': buyCoinsPage,
+      '/level-up': levelUpPage,
+      '/pets': petsPage,
+      '/limited': limitedPage,
+      '/account': accountPage,
+      '/auth': authPage,
+    };
+
+    function renderRoute(){
+      const hash = location.hash.replace('#','') || '/';
+      const user = getUser();
+      // Gate: if no user, force /auth for all routes except /auth
+      if(!user && hash !== '/auth'){
+        location.hash = '#/auth';
+        return;
+      }
+      const view = routes[hash] || notFound;
+      app.innerHTML = view();
+      renderUserPill();
+      app.focus({preventScroll:true});
+    }
+    addEventListener('hashchange', renderRoute);
+    addEventListener('DOMContentLoaded', renderRoute);
+
+    // ---------- User storage (local demo) ----------
+    function getUser(){
+      try { return JSON.parse(localStorage.getItem('gp_user')||'null'); } catch(e){ return null; }
+    }
+    function setUser(u){
+      localStorage.setItem('gp_user', JSON.stringify(u));
+    }
+    function clearUser(){
+      localStorage.removeItem('gp_user');
+    }
+    function renderUserPill(){
+      const u = getUser();
+      const pill = document.getElementById('userPill');
+      if(u){
+        pill.style.display = 'inline-block';
+        pill.textContent = `@${u.username} • ${u.coins} coins`;
+      }else{
+        pill.style.display = 'none';
+      }
+    }
+
+    // ---------- Helpers ----------
+    function chip(text){ return `<span class="pill">${text}</span>`; }
+    function btn(href, text, kind='ghost', attrs=''){ return `<a class="btn ${kind}" href="${href}" ${attrs}>${text}</a>`; }
+    function button(text, kind='ghost', onclick=''){ return `<button class="btn ${kind}" ${onclick?`onclick="${onclick}"`:''}>${text}</button>`; }
+    function copyDiscord(){ navigator.clipboard.writeText('wkeysilver').then(()=>alert('Copied Discord username: wkeysilver')); }
+
+    // ---------- Username Registry helpers (best-effort) ----------
+    function pagesRepoInfo(){
+      const host = location.host; // e.g., user.github.io
+      const path = location.pathname.replace(/^\/|\/$/g, '');
+      const m = host.match(/^([^.]+)\.github\.io$/);
+      if(!m) return null;
+      const owner = m[1];
+      const repo = path.split('/')[0] || `${owner}.github.io`;
+      return { owner, repo };
+    }
+
+    async function isUsernameTakenGlobal(username){
+      const info = pagesRepoInfo();
+      if(!info) return false; // not on Pages; cannot check
+      const q = encodeURIComponent(`repo:${info.owner}/${info.repo} is:issue in:title "${username}" label:user`);
+      const url = `https://api.github.com/search/issues?q=${q}`;
+      try{
+        const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } });
+        if(!res.ok) return false;
+        const data = await res.json();
+        return (data.total_count||0) > 0;
+      }catch(e){ return false; }
+    }
+
+    function reserveUsernameIssueURL(username){
+      const info = pagesRepoInfo();
+      if(!info) return '#';
+      const title = encodeURIComponent(username);
+      const labels = encodeURIComponent('user');
+      const body = encodeURIComponent(`Username reservation request for @${username}\n\n(Submitted from Galaxy Pets site)`);
+      return `https://github.com/${info.owner}/${info.repo}/issues/new?title=${title}&labels=${labels}&body=${body}`;
+    }
+
+    // ---------- Redeem Code ----------
+    async function redeemCode(code){
+      code = (code||'').trim().toUpperCase();
+      if(!code){ alert('Enter a code'); return; }
+      try{
+        const res = await fetch('codes.json', {cache:'no-store'});
+        if(!res.ok){ alert('Redeem temporarily unavailable'); return; }
+        const codes = await res.json();
+        if(!(code in codes)){ alert('Invalid or used code'); return; }
+        const amount = Number(codes[code]||0);
+        let u = getUser();
+        if(!u){ alert('Sign in first'); return; }
+        u.coins = (u.coins||0) + amount;
+        setUser(u);
+        alert(`Redeemed ${amount} coins! New balance: ${u.coins}`);
+      }catch(e){
+        alert('Error: '+e);
+      }
+    }
+
+    // ---------- Pages ----------
+    function authPage(){
+      return `
+        <section class="grid">
+          <div class="card pad">
+            <h1 class="title">Create Your Account</h1>
+            <p class="subtitle">You need an account to enter Galaxy Pets. (Local demo — data stays in your browser.)</p>
+            <form onsubmit="return createAccount(event)">
+              <label>Username</label>
+              <input type="text" id="username" required placeholder="e.g., startraveler" />
+              <div style="height:10px;"></div>
+              <label>Email (optional)</label>
+              <input type="email" id="email" placeholder="you@example.com" />
+              <div style="height:10px;"></div>
+              <label>Password (optional)</label>
+              <input type="password" id="password" placeholder="••••••••" />
+              <div style="height:14px;"></div>
+              ${button('Create Account','primary')}
+            </form>
+            <p class="note" style="margin-top:10px;">No real authentication. Don’t use a real password.</p>
+          </div>
+          <div class="card pad">
+            <h3 class="section-title">Username rules</h3>
+            <ul class="note" style="line-height:1.7;">
+              <li>3–20 chars; letters, numbers, underscore only.</li>
+              <li>Must be unique (checked locally; also checked against GitHub Issues registry if hosted on Pages).</li>
+            </ul>
+          </div>
+        </section>
+      `;
+    }
+
+    async function createAccount(e){
+      e.preventDefault();
+      const username = (document.getElementById('username').value||'').trim();
+      const email = (document.getElementById('email').value||'').trim();
+      const re = /^[a-zA-Z0-9_]{3,20}$/;
+      if(!re.test(username)){ alert('Username must be 3–20 chars: letters, numbers, underscore only.'); return false; }
+
+      // Local uniqueness: prevent using the same username again on this device
+      const existing = JSON.parse(localStorage.getItem('gp_usernames')||'[]');
+      if(existing.includes(username.toLowerCase())){
+        alert('That username is already used on this device.');
+        return false;
+      }
+
+      // Global check (best-effort): GitHub Issues with label=user & title=username
+      const takenGlobal = await isUsernameTakenGlobal(username);
+      if(takenGlobal){
+        alert('That username is reserved. Choose another.');
+        return false;
+      }
+
+      const user = { username, email, createdAt: new Date().toISOString(), coins: 0 };
+      setUser(user);
+      // record locally as taken
+      existing.push(username.toLowerCase());
+      localStorage.setItem('gp_usernames', JSON.stringify(existing));
+      location.hash = '#/account';
+      return false;
+    }
+
+    function homePage(){
+      const u = getUser();
+      return `
+        <section class="hero">
+          <div class="card pad">
+            <h1 class="title">Welcome, <span style="background:linear-gradient(135deg,var(--accent),var(--primary)); -webkit-background-clip:text; background-clip:text; color:transparent;">${u ? u.username : 'Explorer'}</span></h1>
+            <p class="subtitle">Adopt mythical companions, earn coins, and level up your pets — all under a neon night sky.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              ${btn('#/buy-coins','Buy Coins','primary')}
+              ${btn('#/level-up','Level Up Your Pets')}
+              ${btn('#/pets','View Pets')}
+              ${btn('#/limited','Limited Sale')}
+            </div>
+            <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+              ${chip('Galaxy Theme')} ${chip('Account Gate')} ${chip('Redeem Codes')}
+            </div>
+          </div>
+          <div class="card pad">
+            <h2 class="section-title">Quick Info</h2>
+            <div class="list">
+              <div class="list-item"><span>Coin Purchases</span><span class="price">Discord: wkeysilver</span></div>
+              <div class="list-item"><span>Level-Up Price</span><span class="price">500 coins</span></div>
+              <div class="list-item"><span>Limited Deal</span><span class="price">Any pet → Level 50 for 500 coins</span></div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function buyCoinsPage(){
+      return `
+        <section class="grid">
+          <div class="card pad">
+            <h2 class="title" style="font-size:32px;">Buy Coins</h2>
+            <p class="subtitle">Contact the creator on Discord to purchase coins, or redeem a code below.</p>
+            <div class="list-item" style="gap:10px;">
+              <span>Discord</span>
+              <button class="btn primary" onclick="copyDiscord()" aria-label="Copy Discord username">Copy: <span class="kbd">wkeysilver</span></button>
+            </div>
+            <div class="card pad" style="margin-top:12px;">
+              <h3 class="section-title">Redeem a Code</h3>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input id="redeemInput" type="text" placeholder="Enter code (e.g., GPK-AB12)" style="flex:1; min-width:220px;" />
+                <button class="btn primary" onclick="redeemCode(document.getElementById('redeemInput').value)">Redeem</button>
+              </div>
+              <p class="note" style="margin-top:8px;">Codes are provided by the creator on Discord after purchase.</p>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function levelUpPage(){
+      return `
+        <section class="grid">
+          <div class="card pad">
+            <h2 class="title" style="font-size:32px;">Level Up Your Pets</h2>
+            <p class="subtitle">Pricing is simple: <strong>500 coins</strong> per level-up service.</p>
+            <div class="list">
+              <div class="list-item"><span>Level-Up Service</span><span class="price">500 coins</span></div>
+            </div>
+            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+              ${btn('#/buy-coins','Need More Coins?','primary')}
+              ${button('Copy Discord (wkeysilver)','ghost','copyDiscord()')}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function petsPage(){
+      const pets = [
+        {name:'🍟 FRENCH FRY FERRET', coins:100, group:1},
+        {name:'🐦‍⬛ GRIFFIN', coins:100, group:1},
+        {name:'🐓 COCKITRICE', coins:100, group:1},
+        {name:'🐥 GOLDEN GOOSE', coins:100, group:1},
+        {name:'🟦 CORRUPTED KITSUNE', coins:100, group:1},
+        {name:'🪙 DRAGON FLY', coins:200, group:2},
+        {name:'🦖 T REX', coins:200, group:2},
+        {name:'🦑 MIMIC', coins:200, group:2},
+        {name:'🦋 BUTTERFLY', coins:600, group:3},
+        {name:'🟤🙇🏿 SPINO', coins:600, group:3},
+        {name:'🦊 FENNEC FOX', coins:800, group:4},
+        {name:'🐝 DISCO BEE', coins:1200, group:5},
+        {name:'🦝 RACCOON', coins:1500, group:6},
+        {name:'🟥 RED KIT', coins:2800, group:7},
+      ];
+      const groups = [
+        {id:1, label:'100 Coins Tier'},
+        {id:2, label:'200 Coins Tier'},
+        {id:3, label:'600 Coins Tier'},
+        {id:4, label:'800 Coins Tier'},
+        {id:5, label:'1200 Coins Tier'},
+        {id:6, label:'1500 Coins Tier'},
+        {id:7, label:'2800 Coins Tier'},
+      ];
+      function renderList(){
+        return groups.map(g=>{
+          const items = pets.filter(p=>p.group===g.id);
+          if(!items.length) return '';
+          return `
+            <div class="card pad">
+              <h3 class="section-title">${g.label}</h3>
+              <div class="list">
+                ${items.map(p=>`<div class='list-item'><span>${p.name}</span><span class='price'>${p.coins} coins</span></div>`).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      return `
+        <section>
+          <div class="grid">
+            ${renderList()}
+          </div>
+          <div class="card pad" style="margin-top:16px;">
+            <h3 class="section-title">Notes</h3>
+            <p class="note">All prices shown in coins. Conversion used: 1 USD = 100 coins.</p>
+          </div>
+        </section>
+      `;
+    }
+
+    function limitedPage(){
+      return `
+        <section class="grid">
+          <div class="card pad">
+            <h2 class="title" style="font-size:32px;">🍭 New Limited Sale</h2>
+            <p class="subtitle">ANY PET to <strong>Level 50</strong> — takes around <strong>30–40 mins</strong> — <span class="price">500 coins</span></p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              ${btn('#/level-up','See Level-Up Pricing','primary')}
+              ${btn('#/buy-coins','Buy Coins')}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function accountPage(){
+      const u = getUser();
+      if(!u){ location.hash = '#/auth'; return ''; }
+      const info = pagesRepoInfo();
+      const reserveURL = info ? reserveUsernameIssueURL(u.username) : '#';
+      return `
+        <section class="grid">
+          <div class="card pad">
+            <h2 class="title" style="font-size:32px;">Your Account</h2>
+            <div class="list">
+              <div class="list-item"><span>Username</span><span>@${u.username}</span></div>
+              <div class="list-item"><span>Email</span><span>${u.email || '—'}</span></div>
+              <div class="list-item"><span>Coins</span><span class="price">${u.coins} coins</span></div>
+              <div class="list-item"><span>Created</span><span>${new Date(u.createdAt).toLocaleString()}</span></div>
+            </div>
+            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+              ${button('Log out','ghost','logout()')}
+              ${button('Copy Discord (wkeysilver)','primary','copyDiscord()')}
+              ${info ? `<a class="btn" href="${reserveURL}" target="_blank" rel="noopener">Reserve Username on GitHub</a>` : ''}
+            </div>
+            <div class="card pad" style="margin-top:12px;">
+              <h3 class="section-title">Redeem a Code</h3>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input id="redeemInput2" type="text" placeholder="Enter code (e.g., GPK-AB12)" style="flex:1; min-width:220px;" />
+                <button class="btn primary" onclick="redeemCode(document.getElementById('redeemInput2').value)">Redeem</button>
+              </div>
+            </div>
+            <p class="note" style="margin-top:10px;">To enforce global uniqueness, submit a GitHub Issue via “Reserve Username”. The site checks for existing reservations on signup.</p>
+          </div>
+        </section>
+      `;
+    }
+
+    function notFound(){
+      return `<div class="card pad"><h2>Not Found</h2><p class="note">The page you’re looking for doesn’t exist. Try the navigation above.</p></div>`;
+    }
+
+    // ---------- Utilities ----------
+    function logout(){
+      clearUser();
+      location.hash = '#/auth';
+    }
+  </script>
+</body>
+</html>
